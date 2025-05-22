@@ -1,0 +1,2 @@
+CREATE SCHEMA Silver;
+GO

@@ -1,0 +1,267 @@
+{
+	"name": "Instrumentation_Run",
+	"properties": {
+		"activities": [
+			{
+				"name": "Capture Workload Metrics",
+				"description": "Writes PDW node‐level CPU/IO/storage metrics into Telemetry.workload_snapshot.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_CaptureWorkload]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"CaptureTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Capture DMV State",
+				"description": "Populates Telemetry.DMV_Snapshot with current DMV stats.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Capture Workload Metrics",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_CaptureDMV]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"CaptureTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Capture Request Details",
+				"description": "Inserts rows from sys.dm_pdw_exec_requests into Telemetry.Requests_Snapshot.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Capture Plan Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_CaptureRequestsSnapshot]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"CaptureTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Capture Query Store Snapshot",
+				"description": "Pulls runtime and plan stats from the Query Store into Telemetry.QS_Snapshot.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Capture Request Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_CaptureQS]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"CaptureTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Capture Plan Details",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Capture DMV State",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_CapturePlanDetails]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().parameters.param_PipelineName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"CaptureTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"param_PipelineRunId": {
+				"type": "string"
+			},
+			"param_PipelineName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Telemetry"
+		},
+		"annotations": []
+	}
+}

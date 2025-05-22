@@ -1,0 +1,528 @@
+{
+	"name": "Bronze_Load",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup Pending Files",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": "SELECT FileListId, FileName, 'bronze' as Pipeline\n  FROM Control.FileList\n WHERE Status='Pending' AND PipelineName='Bronze';\n",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_Control_Table",
+						"type": "DatasetReference",
+						"parameters": {
+							"param_ControlTableName": "FileList"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach Pending Source File",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup Pending Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup Pending Files').output.value",
+						"type": "Expression"
+					},
+					"batchCount": 1,
+					"activities": [
+						{
+							"name": "Log Start",
+							"description": "record when the Bronze load for a given file begins.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+								"storedProcedureParameters": {
+									"PipelineRunId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"PipelineName": {
+										"value": "Bronze_Load",
+										"type": "String"
+									},
+									"StageName": {
+										"value": {
+											"value": "@concat('Loading to Bronze - ', item().FileName)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "CopyToBronze",
+										"type": "String"
+									},
+									"EventType": {
+										"value": "Begin",
+										"type": "String"
+									},
+									"EventTime": {
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"DurationSec": {
+										"value": null,
+										"type": "Int64"
+									},
+									"RowsAffected": {
+										"value": null,
+										"type": "Int64"
+									},
+									"Status": {
+										"value": "InProgress",
+										"type": "String"
+									},
+									"Message": {
+										"value": null,
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_ASA_dspendtoenddemo",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Log End - Success",
+							"description": "record when the Bronze load for a given file ends.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy Src to Bronze Table",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+								"storedProcedureParameters": {
+									"PipelineRunId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"PipelineName": {
+										"value": "Bronze_Load",
+										"type": "String"
+									},
+									"StageName": {
+										"value": {
+											"value": "@concat('Loaded to Bronze - ', item().FileName)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "CopyToBronze",
+										"type": "String"
+									},
+									"EventType": {
+										"value": "Success",
+										"type": "String"
+									},
+									"EventTime": {
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"DurationSec": {
+										"value": {
+											"value": "@activity('Copy Src to Bronze Table').output.copyDuration\n",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"RowsAffected": {
+										"value": {
+											"value": "@activity('Copy Src to Bronze Table').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"Status": {
+										"value": "Completed",
+										"type": "String"
+									},
+									"Message": {
+										"value": null,
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_ASA_dspendtoenddemo",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Log End - Fail",
+							"description": "record when the Bronze load for a given file ends with a failure.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy Src to Bronze Table",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+								"storedProcedureParameters": {
+									"PipelineRunId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"PipelineName": {
+										"value": "Bronze_Load",
+										"type": "String"
+									},
+									"StageName": {
+										"value": {
+											"value": "@concat('Failed to Load to Bronze - ', item().FileName)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "CopyToBronze",
+										"type": "String"
+									},
+									"EventType": {
+										"value": "Error",
+										"type": "String"
+									},
+									"EventTime": {
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"DurationSec": {
+										"value": null,
+										"type": "Int64"
+									},
+									"RowsAffected": {
+										"value": null,
+										"type": "Int64"
+									},
+									"Status": {
+										"value": "Failed",
+										"type": "String"
+									},
+									"Message": {
+										"value": {
+											"value": "@string(\n    activity('Copy Src to Bronze Table').output.errors[0].message\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_ASA_dspendtoenddemo",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Lookup Bronze Table Name",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "Log Start",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "SELECT TableName\n  FROM Control.FolderTableMap\n WHERE FolderName = '@{substring(item().FileName,0,lastIndexOf(item().FileName,'-'))}'\n",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_Control_Table",
+									"type": "DatasetReference",
+									"parameters": {
+										"param_ControlTableName": "FolderTableMap"
+									}
+								}
+							}
+						},
+						{
+							"name": "Mark Done",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Log End - Success",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "LS_ASA_dspendtoenddemo",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "@concat(\n  'UPDATE Control.FileList SET Status=''Completed'', EndTime = SYSUTCDATETIME(), RowsProcessed = ',\n  string(activity('Copy Src to Bronze Table').output.rowsCopied),\n  ' WHERE FileListId = ',\n  string(item().FileListId),\n  ';'\n)\n",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						},
+						{
+							"name": "Mark Failed",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Log End - Fail",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "LS_ASA_dspendtoenddemo",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "@concat(\n  'UPDATE Control.FileList SET Status=''Failed'', EndTime = SYSUTCDATETIME(), RowsProcessed = 0 WHERE FileListId = ',\n  string(item().FileListId),\n  ';'\n)\n",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						},
+						{
+							"name": "Copy Src to Bronze Table",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Lookup Bronze Table Name",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"allowCopyCommand": true
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_Bronze_File",
+									"type": "DatasetReference",
+									"parameters": {
+										"param_container": {
+											"value": "@item().pipeline",
+											"type": "Expression"
+										},
+										"param_directory": {
+											"value": "@substring(item().FileName,0,lastIndexOf(item().FileName,'-'))",
+											"type": "Expression"
+										},
+										"param_file": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_SQL_Bronze",
+									"type": "DatasetReference",
+									"parameters": {
+										"param_BronzeTableName": "@activity('Lookup Bronze Table Name').output.firstRow.TableName"
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Execute Instrumentation Pipeline",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ForEach Pending Source File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Instrumentation_Run",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"param_PipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"param_PipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"variables": {
+			"var_DEBUG": {
+				"type": "String"
+			},
+			"var_DEBUG2": {
+				"type": "String"
+			},
+			"var_DEBUG3": {
+				"type": "String"
+			},
+			"DEBUG-folderPath": {
+				"type": "String"
+			},
+			"DEBUG-fileName": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Medallion"
+		},
+		"annotations": []
+	}
+}

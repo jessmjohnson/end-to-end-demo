@@ -1,0 +1,10 @@
+{
+	"name": "LS_ADLS_stendtoenddemo",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stendtoenddemo.dfs.core.windows.net/"
+		}
+	}
+}

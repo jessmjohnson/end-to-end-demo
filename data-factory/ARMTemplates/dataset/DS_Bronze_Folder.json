@@ -1,0 +1,93 @@
+{
+	"name": "DS_Bronze_Folder",
+	"properties": {
+		"description": "list the files within a specific sub‑folder",
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_stendtoenddemo",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"param_folderPath": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().param_folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\"",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "AreaName",
+				"type": "String"
+			},
+			{
+				"name": "AreaID",
+				"type": "String"
+			},
+			{
+				"name": "ParkName",
+				"type": "String"
+			},
+			{
+				"name": "ParkID",
+				"type": "String"
+			},
+			{
+				"name": "Date",
+				"type": "String"
+			},
+			{
+				"name": "StartTime",
+				"type": "String"
+			},
+			{
+				"name": "EndTime",
+				"type": "String"
+			},
+			{
+				"name": "TotalTime",
+				"type": "String"
+			},
+			{
+				"name": "ParkConditions",
+				"type": "String"
+			},
+			{
+				"name": "OtherAnimalSightings",
+				"type": "String"
+			},
+			{
+				"name": "Litter",
+				"type": "String"
+			},
+			{
+				"name": "TemperatureWeather",
+				"type": "String"
+			},
+			{
+				"name": "NumberSquirrels",
+				"type": "String"
+			},
+			{
+				"name": "SquirrelSighters",
+				"type": "String"
+			},
+			{
+				"name": "NumberSighters",
+				"type": "String"
+			}
+		]
+	}
+}

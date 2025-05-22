@@ -1,0 +1,23 @@
+{
+	"name": "DS_Bronze_Root",
+	"properties": {
+		"description": "only for a top‑level Get Metadata to discover folders",
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_stendtoenddemo",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "bronze"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

@@ -1,0 +1,24 @@
+{
+	"name": "DS_SQL_Bronze",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ASA_dspendtoenddemo",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"param_BronzeTableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "Bronze",
+			"table": {
+				"value": "@dataset().param_BronzeTableName",
+				"type": "Expression"
+			}
+		}
+	}
+}

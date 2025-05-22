@@ -1,0 +1,24 @@
+{
+	"name": "DS_Control_Table",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ASA_dspendtoenddemo",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"param_ControlTableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "Control",
+			"table": {
+				"value": "@dataset().param_ControlTableName",
+				"type": "Expression"
+			}
+		}
+	}
+}
