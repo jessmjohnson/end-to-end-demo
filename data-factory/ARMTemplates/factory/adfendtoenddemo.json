@@ -1,9 +1,0 @@
-{
-	"name": "adfendtoenddemo",
-	"location": "eastus",
-	"identity": {
-		"type": "SystemAssigned",
-		"principalId": "68e65aa6-1e46-4b35-9be0-b337081bf67b",
-		"tenantId": "16b3c013-d300-468d-ac64-7eda0820b6d3"
-	}
-}
