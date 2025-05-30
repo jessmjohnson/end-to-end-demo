@@ -1,0 +1,11 @@
+{
+	"name": "LS_ADLS_stendtoenddemo",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stendtoenddemo.dfs.core.windows.net/"
+		}
+	}
+}
