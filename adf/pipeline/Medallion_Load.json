@@ -1,0 +1,771 @@
+{
+	"name": "Medallion_Load",
+	"properties": {
+		"activities": [
+			{
+				"name": "Log Start - Bronze Load",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Bronze",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Bronze Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Begin",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "InProgress",
+							"type": "String"
+						},
+						"Message": {
+							"value": null,
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Log End -Bronze Load - Success",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute Bronze Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Bronze",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Bronze Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Success",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "Completed",
+							"type": "String"
+						},
+						"Message": {
+							"value": null,
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Log End - Bronze Load - Fail",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute Bronze Load",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Bronze",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Bronze Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Error",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "Failed",
+							"type": "String"
+						},
+						"Message": {
+							"value": {
+								"value": "@string(\nactivity('Execute Bronze Load').output.errors[0].message\n)",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Execute Bronze Load",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Log Start - Bronze Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Bronze_Load",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Log Start - Silver Load",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Log End -Bronze Load - Success",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Silver",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Silver Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Begin",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "InProgress",
+							"type": "String"
+						},
+						"Message": {
+							"value": null,
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Log End - Silver Load - Success",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute Silver Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Silver",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Silver Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Success",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "Completed",
+							"type": "String"
+						},
+						"Message": {
+							"value": null,
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Log End - Silver Load - Fail",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute Silver Load",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Silver",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Silver Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Error",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "Failed",
+							"type": "String"
+						},
+						"Message": {
+							"value": {
+								"value": "@string(\nactivity('Execute Silver Load').output.errors[0].message\n)",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Execute Silver Load",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Log Start - Silver Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Silver_Load",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"param_processStage": "Silver"
+					}
+				}
+			},
+			{
+				"name": "Log Start - Gold Load",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Log End - Silver Load - Success",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Gold",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Gold Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Begin",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "InProgress",
+							"type": "String"
+						},
+						"Message": {
+							"value": null,
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Log End - Gold Load - Success",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute Gold Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Gold",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Gold Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Success",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "Completed",
+							"type": "String"
+						},
+						"Message": {
+							"value": null,
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Log End - Gold Load - Fail",
+				"description": "",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute Gold Load",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Telemetry].[usp_LogPipelineEvent]",
+					"storedProcedureParameters": {
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": "Medallion_Load",
+							"type": "String"
+						},
+						"StageName": {
+							"value": "Gold",
+							"type": "String"
+						},
+						"ActivityName": {
+							"value": "Execute Gold Load",
+							"type": "String"
+						},
+						"EventType": {
+							"value": "Error",
+							"type": "String"
+						},
+						"EventTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"DurationSec": {
+							"value": null,
+							"type": "Int64"
+						},
+						"RowsAffected": {
+							"value": null,
+							"type": "Int64"
+						},
+						"Status": {
+							"value": "Failed",
+							"type": "String"
+						},
+						"Message": {
+							"value": {
+								"value": "@string(\nactivity('Execute Gold Load').output.errors[0].message\n)",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_dspendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Execute Gold Load",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Log Start - Gold Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Gold_Load",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "Medallion"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-05-22T18:05:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

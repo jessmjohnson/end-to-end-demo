@@ -1,0 +1,13 @@
+{
+	"name": "DS_dspendtoenddemo_Table",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ASA_dspendtoenddemo",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,15 @@
+{
+	"name": "LS_ASA_dspendtoenddemo",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDW",
+		"typeProperties": {
+			"server": "synwendtoenddemo.sql.azuresynapse.net",
+			"database": "dspendtoenddemo",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SystemAssignedManagedIdentity"
+		}
+	}
+}
