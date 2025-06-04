@@ -1,6 +1,5 @@
 {
 	"name": "LS_ASA_dspendtoenddemo",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "AzureSqlDW",

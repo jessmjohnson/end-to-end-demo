@@ -1,0 +1,32 @@
+{
+	"name": "Trigger_DailyDataGenerator",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "DailyCSVGenerator_SquirrelDataset",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2025-06-05T08:01:00",
+				"timeZone": "Eastern Standard Time",
+				"schedule": {
+					"minutes": [
+						1
+					],
+					"hours": [
+						8
+					]
+				}
+			}
+		}
+	}
+}

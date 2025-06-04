@@ -1,0 +1,12 @@
+{
+	"name": "LS_ASA_synwendtoenddemo",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSynapseArtifacts",
+		"typeProperties": {
+			"endpoint": "https://synwendtoenddemo.dev.azuresynapse.net",
+			"authentication": "MSI",
+			"workspaceResourceId": "/subscriptions/b32014a3-d670-48c9-9172-5c517f4411fd/resourceGroups/rg-end-to-end-demo/providers/Microsoft.Synapse/workspaces/synwendtoenddemo"
+		}
+	}
+}

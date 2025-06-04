@@ -1,0 +1,42 @@
+{
+	"name": "DailyCSVGenerator_SquirrelDataset",
+	"properties": {
+		"activities": [
+			{
+				"name": "Run Generate Squirrel Data",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": {
+							"value": "GenerateDailyData_SquirrelDataSet",
+							"type": "Expression"
+						},
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": {
+							"value": "splendtoenddemo",
+							"type": "Expression"
+						},
+						"type": "BigDataPoolReference"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASA_synwendtoenddemo",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": []
+	}
+}
