@@ -11,6 +11,10 @@
 			"type": "string",
 			"defaultValue": "https://stendtoenddemo.dfs.core.windows.net/"
 		},
+		"LS_ASA_synwendtoenddemo_properties_typeProperties_endpoint": {
+			"type": "string",
+			"defaultValue": "https://synwendtoenddemo.dev.azuresynapse.net"
+		},
 		"LS_ASA_dspendtoenddemo_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "synwendtoenddemo.sql.azuresynapse.net"
@@ -48,6 +52,9 @@
 					},
 					"LS_ADLS_stendtoenddemo_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_stendtoenddemo_properties_typeProperties_url')]"
+					},
+					"LS_ASA_synwendtoenddemo_properties_typeProperties_endpoint": {
+						"value": "[parameters('LS_ASA_synwendtoenddemo_properties_typeProperties_endpoint')]"
 					},
 					"LS_ASA_dspendtoenddemo_properties_typeProperties_server": {
 						"value": "[parameters('LS_ASA_dspendtoenddemo_properties_typeProperties_server')]"

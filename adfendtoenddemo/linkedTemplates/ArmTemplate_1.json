@@ -13,6 +13,1315 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Dim_Load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "loads every dimension in one place",
+				"activities": [
+					{
+						"name": "Log Start - dimPark Load",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimPark Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Begin",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "InProgress",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End -dimPark Load - Success",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute dimPark Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimPark Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Success",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Completed",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End - dimPark Load - Fail",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute dimPark Load",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimPark Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Error",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Failed",
+									"type": "String"
+								},
+								"Message": {
+									"value": {
+										"value": "@string(\nactivity('Execute dimPark Load').output.errors[0].message\n)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Execute dimPark Load",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Log Start - dimPark Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "dimPark_Load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"param_ProcessStage": "Gold"
+							}
+						}
+					},
+					{
+						"name": "Log Start - dimSquirrel Load",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Log End -dimPark Load - Success",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimSquirrel Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Begin",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "InProgress",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End -dimSquirrel Load - Success",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute dimSquirrel Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimSquirrel Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Success",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Completed",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End - dimSquirrel Load - Fail",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute dimSquirrel Load",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimSquirrel Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Error",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Failed",
+									"type": "String"
+								},
+								"Message": {
+									"value": {
+										"value": "@string(\nactivity('Execute dimSquirrel Load').output.errors[0].message\n)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Execute dimSquirrel Load",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Log Start - dimSquirrel Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "dimSquirrel_Load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"param_ProcessStage": "Gold"
+							}
+						}
+					},
+					{
+						"name": "Log Start - dimVisitorType Load",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Log End -dimSquirrel Load - Success",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimVisitorType Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Begin",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "InProgress",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End -dimVisitorType Load - Success",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute dimVisitorType Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimVisitorType Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Success",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Completed",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End - dimVisitorType Load - Fail",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute dimVisitorType Load",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Dim_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute dimVisitorType Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Error",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Failed",
+									"type": "String"
+								},
+								"Message": {
+									"value": {
+										"value": "@string(\nactivity('Execute dimVisitorType Load').output.errors[0].message\n)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Execute dimVisitorType Load",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Log Start - dimVisitorType Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "dimVisitorType_Load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"param_ProcessStage": "Gold"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Dims"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-05-22T18:05:55Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Fact_Load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "loads every dimension in one place",
+				"activities": [
+					{
+						"name": "Log Start - factSquirrelObservations Load",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Fact_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute factSquirrelObservations Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Begin",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "InProgress",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End - factSquirrelObservations Load - Success",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute factSquirrelObservations Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Fact_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute factSquirrelObservations Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Success",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Completed",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End - factSquirrelObservations Load - Fail",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute factSquirrelObservations Load",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Fact_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute factSquirrelObservations Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Error",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Failed",
+									"type": "String"
+								},
+								"Message": {
+									"value": {
+										"value": "@string(\nactivity('Execute factSquirrelObservations Load').output.errors[0].message\n)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Execute factSquirrelObservations Load",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Log Start - factSquirrelObservations Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "factSquirrelObservations_Load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"param_ProcessStage": "Gold"
+							}
+						}
+					},
+					{
+						"name": "Log Start - factVisitorLog Load",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Log End - factSquirrelObservations Load - Success",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Fact_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute factVisitorLog Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Begin",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "InProgress",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End - factVisitorLog Load - Success",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute factVisitorLog Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Fact_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute factVisitorLog Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Success",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Completed",
+									"type": "String"
+								},
+								"Message": {
+									"value": null,
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Log End - factVisitorLog Load - Fail",
+						"description": "",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Execute factVisitorLog Load",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
+							"storedProcedureParameters": {
+								"PipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"PipelineName": {
+									"value": "Fact_Load",
+									"type": "String"
+								},
+								"StageName": {
+									"value": "Gold",
+									"type": "String"
+								},
+								"ActivityName": {
+									"value": "Execute factVisitorLog Load",
+									"type": "String"
+								},
+								"EventType": {
+									"value": "Error",
+									"type": "String"
+								},
+								"EventTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "Datetime"
+								},
+								"DurationSec": {
+									"value": null,
+									"type": "Int64"
+								},
+								"RowsAffected": {
+									"value": null,
+									"type": "Int64"
+								},
+								"Status": {
+									"value": "Failed",
+									"type": "String"
+								},
+								"Message": {
+									"value": {
+										"value": "@string(\nactivity('Execute factVisitorLog Load').output.errors[0].message\n)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_dspendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Execute factVisitorLog Load",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Log Start - factVisitorLog Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "factVisitorLog_Load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"param_ProcessStage": "Gold"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Facts"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-05-22T18:05:55Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Gold_Load')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -565,7 +1874,10 @@
 				"annotations": [],
 				"lastPublishTime": "2025-05-22T18:05:56Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Dim_Load')]",
+				"[concat(variables('factoryId'), '/pipelines/Fact_Load')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/Medallion_Load')]",
