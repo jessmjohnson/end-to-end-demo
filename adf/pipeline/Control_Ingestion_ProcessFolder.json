@@ -95,7 +95,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"storedProcedureName": "Control.usp_InsertFileList",
+								"storedProcedureName": "[Control].[usp_InsertFileList]",
 								"storedProcedureParameters": {
 									"FileName": {
 										"value": {
