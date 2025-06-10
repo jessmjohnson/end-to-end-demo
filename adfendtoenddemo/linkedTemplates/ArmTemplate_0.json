@@ -136,7 +136,8 @@
 				},
 				"parameters": {
 					"p_run_date": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "@{formatDateTime(utcNow(),'yyyyMMdd')}"
 					}
 				},
 				"variables": {
