@@ -57,7 +57,7 @@
 		"parameters": {
 			"p_run_date": {
 				"type": "string",
-				"defaultValue": "\"@{formatDateTime(utcNow(),'yyyyMMdd')}"
+				"defaultValue": "@{formatDateTime(utcNow(),'yyyyMMdd')}"
 			}
 		},
 		"variables": {
