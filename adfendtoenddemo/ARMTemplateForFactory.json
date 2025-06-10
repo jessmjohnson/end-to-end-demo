@@ -6199,6 +6199,36 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/DailyCSVGenerator_SquirrelDataset')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Trigger_Medallion_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Medallion_Load",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Hour",
+						"interval": 8,
+						"startTime": "2025-06-10T18:12:00",
+						"timeZone": "Eastern Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Medallion_Load')]"
+			]
 		}
 	]
 }
