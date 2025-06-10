@@ -880,6 +880,15 @@
 								},
 								"type": "NotebookReference"
 							},
+							"parameters": {
+								"param_run_date": {
+									"value": {
+										"value": "@formatDateTime(\r\nconcat( \r\n    substring(pipeline().parameters.p_run_date,0,4),'-',\r\n    substring(pipeline().parameters.p_run_date,4,2),'-',\r\n    substring(pipeline().parameters.p_run_date,6,2)),\r\n    'yyyy-MM-dd')",
+										"type": "Expression"
+									},
+									"type": "string"
+								}
+							},
 							"snapshot": true,
 							"sparkPool": {
 								"referenceName": {
@@ -888,11 +897,13 @@
 								},
 								"type": "BigDataPoolReference"
 							},
+							"executorSize": "Small",
 							"conf": {
 								"spark.dynamicAllocation.enabled": null,
 								"spark.dynamicAllocation.minExecutors": null,
 								"spark.dynamicAllocation.maxExecutors": null
 							},
+							"driverSize": "Small",
 							"numExecutors": null
 						},
 						"linkedServiceName": {
@@ -903,6 +914,16 @@
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_run_date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"dummy_var": {
+						"type": "String"
+					}
 				},
 				"annotations": []
 			},
@@ -6123,7 +6144,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
