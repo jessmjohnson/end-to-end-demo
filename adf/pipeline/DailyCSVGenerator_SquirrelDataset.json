@@ -25,7 +25,7 @@
 					"parameters": {
 						"param_run_date": {
 							"value": {
-								"value": "@formatDateTime(\r\nconcat( \r\n    substring(pipeline().parameters.p_run_date,0,4),'-',\r\n    substring(pipeline().parameters.p_run_date,4,2),'-',\r\n    substring(pipeline().parameters.p_run_date,6,2)),\r\n    'yyyy-MM-dd')",
+								"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
 								"type": "Expression"
 							},
 							"type": "string"
@@ -56,8 +56,7 @@
 		],
 		"parameters": {
 			"p_run_date": {
-				"type": "string",
-				"defaultValue": "@{formatDateTime(utcNow(),'yyyyMMdd')}"
+				"type": "string"
 			}
 		},
 		"variables": {
