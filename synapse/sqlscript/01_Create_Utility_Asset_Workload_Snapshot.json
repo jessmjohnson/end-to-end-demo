@@ -1,0 +1,17 @@
+{
+	"name": "01_Create_Utility_Asset_Workload_Snapshot",
+	"properties": {
+		"content": {
+			"query": "/*****************************************************************************************/\n/** Workload_Snapshot                                                                   **/\n/**     What:   Captures workload‑group metrics: total, running, pending requests and   **/\n/**             resource milliseconds.                                                  **/\n/**                                                                                     **/\n/**     Why:    Reveals queueing or throttling in resource‑governed pools. Tracks pool  **/\n/**             health and contention over time.                                        **/\n/*****************************************************************************************/\n\n-------------------------------------------------------------------------------------------\n--  Table Design: Telemetry.Workload_Snapshot \n-------------------------------------------------------------------------------------------\nCREATE TABLE Telemetry.Workload_Snapshot ( \n  CaptureTime           DATETIME2 NOT NULL, \n  PoolName              SYSNAME   NOT NULL, \n  WorkloadGroupName     SYSNAME   NOT NULL, \n  TotalRequests         BIGINT    NULL, \n  RunningRequests       BIGINT    NULL, \n  PendingRequests       BIGINT    NULL, \n  ResourceMilliSeconds  BIGINT    NULL\n)\nWITH \n(\n  DISTRIBUTION = HASH(PoolName)\n);\n\nCREATE CLUSTERED COLUMNSTORE INDEX CCI_Workload_Snapshot\n  ON Telemetry.Workload_Snapshot;\n\n-------------------------------------------------------------------------------------------\n--  Stored Procedure Design: Telemetry.usp_CaptureWorkload\n-------------------------------------------------------------------------------------------\nCREATE PROCEDURE Telemetry.usp_CaptureWorkload @CaptureTime DATETIME2 AS\nBEGIN\n  INSERT INTO Telemetry.Workload_Snapshot\n  SELECT\n    @CaptureTime,\n    [database_name],\n    workload_group_name,\n    total_requests_count,\n    running_requests_count,\n    pending_requests_count,\n    total_resource_milliseconds\n  FROM sys.dm_workload_mgmt_workload_groups;\nEND;\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

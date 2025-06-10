@@ -1,0 +1,17 @@
+{
+	"name": "vw_QS_TopSlowQueries",
+	"properties": {
+		"content": {
+			"query": "/****************************************************************************************\n * Script : vw_QS_TopSlowQueries.sql\n * Schema : Telemetry\n * Purpose: Ranks top slow queries per pipeline run based on maximum duration from Telemetry.QS_Snapshot.\n * Author : Jess Johnson\n * Created: 2025-05-19\n * Version: 1.0\n *\n * Description: Ranks captured Query-Store entries by their maximum duration per snapshot, letting you identify \n *      the slowest queries.\n *\n * Why: Query Store holds runtime stats for every query and plan. Pinpointing the top-N slowest queries \n *        directs your optimization efforts where they’ll have the greatest impact.\n *\n * Usage: Inspect QueryIds and PlanIds to drill into execution plans or rewrite SQL.\n *\n * Benefits: Targets the real performance hotspots, not just the most frequent queries,\n *           Prioritizes tuning efforts on queries that cost the most time,\n *           Feeds into alerting (e.g. alert if any query exceeds X ms)\n *\n * Dependencies:\n *   - Telemetry.QS_Snapshot\n *\n * Change History:\n * 2025-05-19 JJ-1.0 Initial creation\n ****************************************************************************************/\n\n-- ======================================================================================\n-- SECTION 1: Declarations\n-- ======================================================================================\n-- No parameters required.\n\n-- ======================================================================================\n-- SECTION 2: Main logic\n-- ======================================================================================\nCREATE VIEW Telemetry.vw_QS_TopSlowQueries AS\nSELECT\n  PipelineName,\n  PipelineRunId,\n  CaptureTime,\n  QueryId,\n  PlanId,\n  CountExecutions,\n  AvgDuration,\n  MaxDuration,\n  ROW_NUMBER() OVER (\n    PARTITION BY PipelineRunId, CaptureTime\n    ORDER BY MaxDuration DESC\n  ) AS RankByMaxDuration\nFROM Telemetry.QS_Snapshot;\nGO\n\n-- ======================================================================================\n-- SECTION 3: Cleanup / Reporting\n-- ======================================================================================\n-- No cleanup required.\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

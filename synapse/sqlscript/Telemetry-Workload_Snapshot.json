@@ -1,0 +1,17 @@
+{
+	"name": "Telemetry-Workload_Snapshot",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nDROP PROC [Telemetry].[usp_CaptureWorkload] ;\nGO\nCREATE PROC [Telemetry].[usp_CaptureWorkload] \n @PipelineName    VARCHAR(75),\n  @PipelineRunId   VARCHAR(50),\n  @CaptureTime     DATETIME2\nAS\nBEGIN\n  SET NOCOUNT ON;\n\n  INSERT INTO Telemetry.Workload_Snapshot\n    (PipelineName,\n     PipelineRunId,\n     CaptureTime,\n     PoolName,\n     WorkloadGroupName,\n     TotalRequests,\n     RunningRequests,\n     PendingRequests,\n     ResourceMilliSeconds)\n  SELECT\n    @PipelineName,\n    @PipelineRunId,\n    @CaptureTime,\n    rp.name                                 AS PoolName,  \n    wg.name                                 AS WorkloadGroupName,\n    wg.total_request_count                  AS TotalRequests,           -- cumulative completed requests \n    wg.active_request_count                 AS RunningRequests,         -- current active requests \n    wg.total_queued_request_count           AS PendingRequests,         -- requests queued by GROUP_MAX_REQUESTS \n    rp.total_cpu_usage_ms                   AS ResourceMilliSeconds     -- CPU ms used by this pool\n  FROM sys.dm_pdw_nodes_resource_governor_workload_groups AS wg  -- workload group stats :contentReference[oaicite:0]{index=0}\n  JOIN sys.dm_pdw_nodes_resource_governor_resource_pools   AS rp  -- resource pool stats :contentReference[oaicite:1]{index=1}\n    ON wg.pool_id = rp.pool_id;\nEND;\nGO\n\n\nDROP TABLE [Telemetry].[Workload_Snapshot]\nGO\n\nSET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE Telemetry.Workload_Snapshot\n(\nPipelineName         VARCHAR(75)       NULL,\n  PipelineRunId        UNIQUEIDENTIFIER  NOT NULL,\n  CaptureTime          DATETIME2(7)      NOT NULL,\n  PoolName             SYSNAME           NOT NULL,   -- nvarchar(128)\n  WorkloadGroupName    SYSNAME           NOT NULL,\n  TotalRequests        BIGINT            NULL,\n  RunningRequests      BIGINT            NULL,\n  PendingRequests      BIGINT            NULL,\n  ResourceMilliSeconds BIGINT            NULL\n)\nWITH\n(\n\tDISTRIBUTION = HASH ( [PoolName] ),\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

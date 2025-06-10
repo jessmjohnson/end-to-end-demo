@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 1",
+	"properties": {
+		"content": {
+			"query": "-- 1) Create the user from your ADF managed identity\nCREATE USER [adfendtoenddemo] \n  FROM EXTERNAL PROVIDER;\nGO\n\n-- 2) Add them to the db_datareader role\nEXEC sp_addrolemember  \n     @rolename = N'db_datareader', \n     @membername = N'adfendtoenddemo';\nGO\n\n-- 3) And to the db_datawriter role\nEXEC sp_addrolemember  \n     @rolename = N'db_datawriter', \n     @membername = N'adfendtoenddemo';\nGO\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

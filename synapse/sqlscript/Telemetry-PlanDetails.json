@@ -1,0 +1,17 @@
+{
+	"name": "Telemetry-PlanDetails",
+	"properties": {
+		"content": {
+			"query": "DROP PROCEDURE [Telemetry].[usp_CapturePlanDetails]\nGO\n\nSET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE PROC [Telemetry].[usp_CapturePlanDetails] \n  @PipelineRunId UNIQUEIDENTIFIER,\n  @PipelineName  VARCHAR(100),\n  @CaptureTime   DATETIME2(7)\nAS\nBEGIN\n  SET NOCOUNT ON;\n\n  -- no CaptureSettings table, so capture all plans\n  DECLARE @minElapsedMs BIGINT = 0;\n\n  INSERT INTO Telemetry.PlanDetails\n    (PipelineName, PipelineRunId, CaptureTime, QueryId, PlanId, PlanXml)\n  SELECT\n    @PipelineName,\n    @PipelineRunId,\n    @CaptureTime,\n    q.query_id,\n    p.plan_id,\n    p.query_plan\n  FROM sys.query_store_runtime_stats AS rs\n  JOIN sys.query_store_plan           AS p\n    ON rs.plan_id  = p.plan_id\n  JOIN sys.query_store_query          AS q\n    ON p.query_id = q.query_id\n  WHERE rs.max_duration > @minElapsedMs;\nEND;\nGO\n\n\n-- 1) Drop any existing table\n-- 1) Drop any existing columnstore index\nIF EXISTS (\n  SELECT 1 \n    FROM sys.indexes \n   WHERE name = 'CCI_PlanDetails'\n     AND object_id = OBJECT_ID('Telemetry.PlanDetails')\n)\nBEGIN\n  DROP INDEX CCI_PlanDetails ON Telemetry.PlanDetails;\nEND\nGO\n\n-- 2) Drop the table if it exists\nDROP TABLE Telemetry.PlanDetails;\nGO\n\n-- 3) Create the table as a heap (no columnstore)\nCREATE TABLE Telemetry.PlanDetails\n(\n  PipelineName   VARCHAR(100)     NULL,\n  PipelineRunId  UNIQUEIDENTIFIER NOT NULL,\n  CaptureTime    DATETIME2(7)     NOT NULL,\n  QueryId        BIGINT           NOT NULL,\n  PlanId         BIGINT           NOT NULL,\n  PlanXml        NVARCHAR(MAX)    NOT NULL\n)\nWITH\n(\n  DISTRIBUTION = ROUND_ROBIN,\n  HEAP\n);\nGO\n\n-- 2) Add a nonclustered, NOT ENFORCED primary key for uniqueness\nALTER TABLE Telemetry.PlanDetails\nADD CONSTRAINT PK_PlanDetails\n  PRIMARY KEY NONCLUSTERED\n    (PipelineRunId, CaptureTime, QueryId, PlanId)\n  NOT ENFORCED;\nGO\n\n-- 4) Add a nonclustered, NOT ENFORCED primary key\nALTER TABLE Telemetry.PlanDetails\nADD CONSTRAINT PK_PlanDetails\n  PRIMARY KEY NONCLUSTERED\n    (PipelineRunId, CaptureTime, QueryId, PlanId)\n  NOT ENFORCED;\nGO\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

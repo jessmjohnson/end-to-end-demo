@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 9",
+	"properties": {
+		"content": {
+			"query": "SELECT FileListId, FileName\n SELECT * FROM Control.FileList\n WHERE Status='Pending' AND PipelineName='Bronze';\n\n\nUPDATE Control.FileList\nSET Status = 'Skip-Debug'\nWHERE FileListId <> 56; FileName LIKE 'park-data%' OR FileName LIKE 'visitor-log%';\n\nUPDATE Control.FileList\nSET Status = 'Pending', \n--EnqueueTime = NULL, \nEndTime = NULL, \nRowsProcessed = NULL, \nErrorMessage =NULL;\n\n\nWHERE FileName LIKE 'squirrel-data%';\n\nsquirrel-data/squirrel-data-20250509.csv\nhttps://stendtoenddemo.blob.core.windows.net/bronze/squirrel-data/squirrel-data-20250509.csv\n\n\n@substring(\n  variables('var_DEBUG'),\n  add(indexOf(variables('var_DEBUG'), '/'),1),\n  subtract(\n    lastIndexOf(variables('var_DEBUG'), '/'),\n    add(indexOf(variables('var_DEBUG'), '/'),1)\n  )\n)\n\nSELECT * FROM Bronze.SquirrelData;\n\n\nSELECT FileListId, FileName, 'bronze' as Pipeline\n  FROM Control.FileList\n WHERE Status='Pending' AND PipelineName='Bronze';\n\n\nTRUNCATE TABLE Bronze.SquirrelData;\n SELECT * FROM Bronze.SquirrelData;\n SELECT COUNT(*) FROM Bronze.SquirrelData;\n\n TRUNCATE TABLE Bronze.ParkData;\n SELECT * FROM Bronze.ParkData;\n SELECT COUNT(*) FROM Bronze.ParkData;\n\n TRUNCATE TABLE Bronze.VisitorLog;\n SELECT * FROM Bronze.VisitorLog;\n SELECT COUNT(*) FROM Bronze.VisitorLog;\n\nTRUNCATE TABLE Telemetry.PipelineLog;\n SELECT * FROM Telemetry.PipelineLog;\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": -1
+		},
+		"type": "SqlQuery"
+	}
+}

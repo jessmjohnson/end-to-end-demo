@@ -1,0 +1,17 @@
+{
+	"name": "Telemetry-Requests_Snapshot",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\nDROP PROC [Telemetry].[usp_CaptureRequestsSnapshot];\nGO\nCREATE PROC Telemetry.usp_CaptureRequestsSnapshot\n  @PipelineRunId UNIQUEIDENTIFIER,\n  @PipelineName  VARCHAR(75),\n  @CaptureTime   DATETIME2\nAS\nBEGIN\n  SET NOCOUNT ON;\n\n  INSERT INTO Telemetry.Requests_Snapshot\n    (CaptureTime, PipelineRunId, PipelineName, TotalRequests, AvgElapsedMs, MaxElapsedMs)\n  SELECT\n    @CaptureTime,\n    @PipelineRunId,\n    @PipelineName,\n  COUNT_BIG(*) AS TotalRequests,\n    AVG(CAST(total_elapsed_time AS FLOAT) / 1000.0) AS AvgElapsedMs,\n    MAX(CAST(total_elapsed_time AS FLOAT) / 1000.0) AS MaxElapsedMs\n  FROM sys.dm_pdw_exec_requests    -- correct DMV for Dedicated SQL Pools :contentReference[oaicite:0]{index=0}\n  WHERE \n    status IN ('Running','Suspended','Pending')\n    OR (status = 'Completed' \n        AND start_time >= DATEADD(MINUTE, -1, @CaptureTime));\nEND;\nGO\n\nDROP TABLE [Telemetry].[Requests_Snapshot]\nGO\n\nSET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [Telemetry].[Requests_Snapshot]\n( \n  CaptureTime     DATETIME2       NOT NULL,\n  PipelineRunId   UNIQUEIDENTIFIER NOT NULL,\n  PipelineName    VARCHAR(75)      NOT NULL,\n  TotalRequests   BIGINT           NULL,\n  AvgElapsedMs    FLOAT            NULL,\n  MaxElapsedMs    FLOAT            NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

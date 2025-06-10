@@ -1,0 +1,17 @@
+{
+	"name": "01_Create_Utility_Asset_QS_Snapshot",
+	"properties": {
+		"content": {
+			"query": "/*****************************************************************************************/\n/** QS_Snapshot                                                                         **/\n/**     What:   Stores runtime statistics from Query Store: execution counts, elapsed   **/\n/**             time, logical reads/writes.                                             **/\n/**                                                                                     **/\n/**     Why:    Enables historical performance analysis and regression detection.       **/\n/**             Allows for the automating of building time series of query performance  **/\n/**             metrics.                                                                **/\n/*****************************************************************************************/\n\n-------------------------------------------------------------------------------------------\n--  Table Design: Telemetry.QS_Snapshot \n-------------------------------------------------------------------------------------------\nCREATE TABLE Telemetry.QS_Snapshot ( \n  CaptureTime        DATETIME2 NOT NULL, \n  QueryId            BIGINT    NOT NULL, \n  PlanId             BIGINT    NOT NULL, \n  ExecutionCount     BIGINT    NOT NULL, \n  TotalElapsedMs     BIGINT    NOT NULL, \n  TotalLogicalReads  BIGINT    NOT NULL, \n  TotalLogicalWrites BIGINT    NOT NULL, \n  MaxElapsedMs       BIGINT    NULL, \n  AvgElapsedMs       FLOAT     NULL\n)\nWITH \n(\n  DISTRIBUTION = HASH(QueryId),\n  CLUSTERED COLUMNSTORE INDEX\n);\n\nALTER TABLE Telemetry.QS_Snapshot\nADD CONSTRAINT PK_QS_Snapshot\n  PRIMARY KEY NONCLUSTERED (CaptureTime, QueryId, PlanId)\n  NOT ENFORCED;\nGO;\n\n-------------------------------------------------------------------------------------------\n-- Stored Procedure Design: Telemetry.usp_CaptureQS\n-------------------------------------------------------------------------------------------\nCREATE PROCEDURE Telemetry.usp_CaptureQS @CaptureTime DATETIME2 AS\nBEGIN\n  INSERT INTO Telemetry.QS_Snapshot\n  SELECT\n    @CaptureTime,\n    q.query_id,\n    p.plan_id,\n    rs.count_executions,\n    rs.total_duration_ms,\n    rs.total_logical_reads,\n    rs.total_logical_writes,\n    rs.max_duration_ms,\n    rs.avg_duration_ms\n  FROM sys.query_store_runtime_stats rs\n  JOIN sys.query_store_plan p ON rs.plan_id = p.plan_id\n  JOIN sys.query_store_query q ON p.query_id = q.query_id;\nEND;\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

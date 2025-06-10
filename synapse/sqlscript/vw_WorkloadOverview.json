@@ -1,0 +1,17 @@
+{
+	"name": "vw_WorkloadOverview",
+	"properties": {
+		"content": {
+			"query": "/****************************************************************************************\n * Script : vw_WorkloadOverview.sql\n * Schema : Telemetry\n * Purpose: Provides per-run resource-governor metrics overview from Telemetry.Workload_Snapshot.\n * Author : Jess Johnson\n * Created: 2025-05-19\n * Version: 1.0\n *\n * Description: Shows per-pipeline-run snapshots of resource-governor metrics (requests and CPU usage) \n *              for each workload group.\n *\n * Why: Resource-governor settings and workload groups determine how queries share compute resources. \n *      Capturing those metrics lets you see bottlenecks or skew in group utilization.\n *\n * Usage: Use it to track how many requests each group ran, how many were queued, and how many CPU \n *        milliseconds they consumed over time.\n *\n * Benefits: Visibility into resource allocation across groups, \n *           Early detection of queue build-up (pending requests),\n *           Correlation between high CPU use and slowdowns\n *\n * Dependencies:\n *   - Telemetry.Workload_Snapshot\n *\n * Change History:\n * 2025-05-19 JJ-1.0 Initial creation\n ****************************************************************************************/\n\n-- ======================================================================================\n-- SECTION 1: Declarations\n-- ======================================================================================\n-- No parameters required.\n\n-- ======================================================================================\n-- SECTION 2: Main logic\n-- ======================================================================================\nCREATE VIEW Telemetry.vw_WorkloadOverview AS\nSELECT\n  PipelineName,\n  PipelineRunId,\n  CaptureTime,\n  PoolName,\n  WorkloadGroupName,\n  TotalRequests,\n  RunningRequests,\n  PendingRequests,\n  ResourceMilliSeconds\nFROM Telemetry.Workload_Snapshot;\nGO\n\n-- ======================================================================================\n-- SECTION 3: Cleanup / Reporting\n-- ======================================================================================\n-- No cleanup required.\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

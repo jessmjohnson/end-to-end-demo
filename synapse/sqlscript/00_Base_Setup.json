@@ -1,0 +1,17 @@
+{
+	"name": "00_Base_Setup",
+	"properties": {
+		"content": {
+			"query": "ALTER DATABASE dspendtoenddemo\nSET QUERY_STORE = ON;\nGO;\n\nCREATE SCHEMA Telemetry;\nGO;\n\nCREATE SCHEMA Control;\nGO;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

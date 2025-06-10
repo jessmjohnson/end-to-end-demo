@@ -1,0 +1,17 @@
+{
+	"name": "demo db permissions helper",
+	"properties": {
+		"content": {
+			"query": "-- 1) Create the ADF managed‑identity user (if you haven’t already)\nCREATE USER adfendtoenddemo\n  FROM EXTERNAL PROVIDER;\n\n-- 2) Grant EXECUTE on just that one proc\nGRANT EXECUTE \n  ON OBJECT::Control.usp_InsertFileList \n  TO adfendtoenddemo;\n\n-- —or— grant EXECUTE on every object in the Control schema\nGRANT EXECUTE \n  ON SCHEMA::Control \n  TO adfendtoenddemo;\nGO\n\n-- 2) Grant EXECUTE on just that one proc\nGRANT EXECUTE \n  ON OBJECT::Telemetry.usp_LogPipelineEvent \n  TO adfendtoenddemo;\nGO\n\n-- —or— grant EXECUTE on every object in the Control schema\nGRANT EXECUTE \n  ON SCHEMA::Telemetry  \n  TO adfendtoenddemo;\nGO\n\nGRANT EXECUTE \n  ON SCHEMA::Bronze \n  TO adfendtoenddemo;\nGO\n\nGRANT EXECUTE \n  ON SCHEMA::Silver \n  TO adfendtoenddemo;\nGO\n\nGRANT EXECUTE \n  ON SCHEMA::Gold \n  TO adfendtoenddemo;\nGO\n\n\n\n  -- Grant bulk‑ops permission to your ADF MSI user\nGRANT ADMINISTER DATABASE BULK OPERATIONS TO adfendtoenddemo;\nGO\n\n\n\n-- Bronze schema: read‐only\nGRANT SELECT \n  ON SCHEMA::Bronze \n  TO adfendtoenddemo;\nGO\n\n-- Silver schema: allow truncates (ALTER), inserts, and exec of SPs\nGRANT ALTER, INSERT \n  ON SCHEMA::Silver \n  TO adfendtoenddemo;\nGO\n\nGRANT EXECUTE \n  ON SCHEMA::Silver \n  TO adfendtoenddemo;\nGO\n\n\n-- Bronze schema: read‐only\nGRANT SELECT \n  ON SCHEMA::Gold \n  TO adfendtoenddemo;\nGO\n\n-- Silver schema: allow truncates (ALTER), inserts, and exec of SPs\nGRANT ALTER, INSERT \n  ON SCHEMA::Gold \n  TO adfendtoenddemo;\nGO\n\nGRANT EXECUTE \n  ON SCHEMA::Gold \n  TO adfendtoenddemo;\nGO\n\n\n\n\n-- Bronze schema: read‐only\nGRANT SELECT \n  ON SCHEMA::Telemetry \n  TO adfendtoenddemo;\nGO\n\n-- Silver schema: allow truncates (ALTER), inserts, and exec of SPs\nGRANT ALTER, INSERT \n  ON SCHEMA::Telemetry \n  TO adfendtoenddemo;\nGO\n\nGRANT EXECUTE \n  ON SCHEMA::Telemetry \n  TO adfendtoenddemo;\nGO\n\n\nCREATE SCHEMA Analytics\n\n\n-- Bronze schema: read‐only\nGRANT SELECT \n  ON SCHEMA::Analytics \n  TO adfendtoenddemo;\nGO\n\n-- Silver schema: allow truncates (ALTER), inserts, and exec of SPs\nGRANT ALTER, INSERT \n  ON SCHEMA::Analytics \n  TO adfendtoenddemo;\nGO\n\nGRANT EXECUTE \n  ON SCHEMA::Analytics \n  TO adfendtoenddemo;\nGO\n\nGRANT VIEW DATABASE STATE TO [adfendtoenddemo];\n\n-- verify\nSELECT \n*\nFROM sys.database_permissions p\nJOIN sys.database_principals dp\n  ON p.grantee_principal_id = dp.principal_id\nWHERE permission_name = 'ADMINISTER DATABASE BULK OPERATIONS';\n\n\nSELECT * FROM Telemetry.PipelineLog WHERE PipelineName = 'Gold_Load';\n\nSELECT * FROM Gold.dimPark;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

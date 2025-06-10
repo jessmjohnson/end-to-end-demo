@@ -1,0 +1,17 @@
+{
+	"name": "02_Create_Control_Asset_PipelineRegistry",
+	"properties": {
+		"content": {
+			"query": "/*****************************************************************************************/\n/** PipelineRegistry                                                                    **/\n/**     What:   A table that records each pipeline’s last start/end times, status,      **/\n/**             and run count.                                                          **/\n/**                                                                                     **/\n/**     Why:    Provides a centralized dashboard for monitoring pipeline health,        **/\n/**             alerting on failures, and tracking SLA compliance.                      **/\n/*****************************************************************************************/\n\n-------------------------------------------------------------------------------------------\n--  Table Design: Control.PipelineRegistry \n-------------------------------------------------------------------------------------------\n\nCREATE TABLE Control.PipelineRegistry (\n  PipelineName          VARCHAR(50)   NOT NULL,             -- 'Bronze', 'Silver', 'Gold', 'Instrumentation'\n  LastRunStart          DATETIME2     NULL,\n  LastRunEnd            DATETIME2     NULL,\n  LastStatus            VARCHAR(20)   NULL,                 -- 'Success' / 'Error'\n  RunCount              INT           NOT NULL DEFAULT(0),\n  Notes                 VARCHAR(1000) NULL\n)\nWITH\n(\n    DISTRIBUTION = HASH(PipelineName)\n);\nGO\n\nALTER TABLE Control.PipelineRegistry\nADD CONSTRAINT PK_PipelineRegistry\n  UNIQUE (PipelineName) NOT ENFORCED;\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

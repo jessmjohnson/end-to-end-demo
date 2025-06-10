@@ -1,0 +1,17 @@
+{
+	"name": "Analytics-vw_SquirrelObsCountAvgHeightByPark",
+	"properties": {
+		"content": {
+			"query": "\nCREATE VIEW Analytics.vw_SquirrelObsCountAvgHeightByPark AS\n-- Daily observation count and average height by park\nSELECT\n  d.FullDate            AS [Date],\n  p.ParkName            AS [Park],\n  COUNT(*)              AS [Observations],\n  ROUND(AVG(f.AboveGroundHeight), 2) AS [AvgHeightFt]\nFROM Gold.factSquirrelObservations AS f\nJOIN Gold.dimDate AS d\n  ON f.DateKey = d.DateKey\nJOIN Gold.dimPark AS p\n  ON f.ParkKey = p.ParkKey\nGROUP BY\n  d.FullDate,\n  p.ParkName",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

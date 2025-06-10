@@ -1,0 +1,17 @@
+{
+	"name": "vw_PlanDetailsEnriched",
+	"properties": {
+		"content": {
+			"query": "/****************************************************************************************\n * Script : vw_PlanDetailsEnriched.sql\n * Schema : Telemetry\n * Purpose: Correlates captured plan XML with runtime stats for deeper analysis.\n * Author : Jess Johnson\n * Created: 2025-05-19\n * Version: 1.0\n *\n * Description: Joins plan XML from PlanDetails with runtime stats from QS_Snapshot, giving \n *              you the full execution plan alongside execution metrics.\n *\n * Why: Seeing a plan in isolation or stats in isolation isn’t enough—you need both side by \n *      side to understand why a plan behaves poorly.\n *\n * Usage: Open the PlanXml in a plan viewer, compare its operators and warnings against \n *        the captured durations and I/O.\n *\n * Benefits: Holistic view of plan shape and performance metrics,\n *           Speeds up root-cause analysis when tuning slow queries,\n *           Enables regression checks (detect plan changes that increased durations)\n *\n * Dependencies:\n *   - Telemetry.PlanDetails\n *   - Telemetry.QS_Snapshot\n *\n * Change History:\n * 2025-05-19 JJ-1.0 Initial creation\n ****************************************************************************************/\n\n-- ======================================================================================\n-- SECTION 1: Declarations\n-- ======================================================================================\n-- No parameters required.\n\n-- ======================================================================================\n-- SECTION 2: Main logic\n-- ======================================================================================\nCREATE VIEW Telemetry.vw_PlanDetailsEnriched AS\nSELECT\n  PD.PipelineName,\n  PD.PipelineRunId,\n  PD.CaptureTime,\n  PD.QueryId,\n  PD.PlanId,\n  PD.PlanXml,\n  QS.CountExecutions,\n  QS.AvgDuration,\n  QS.MaxDuration\nFROM Telemetry.PlanDetails AS PD\nJOIN Telemetry.QS_Snapshot AS QS\n  ON PD.CaptureTime = QS.CaptureTime\n AND PD.QueryId    = QS.QueryId\n AND PD.PlanId     = QS.PlanId;\nGO\n\n-- ======================================================================================\n-- SECTION 3: Cleanup / Reporting\n-- ======================================================================================\n-- No cleanup required.\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "FolderTableMap Seeding",
+	"properties": {
+		"content": {
+			"query": "-- Create the mapping table with HASH distribution\nCREATE TABLE Control.FolderTableMap\n(\n  FolderName VARCHAR(50) NOT NULL,   -- e.g. 'park-data'\n  TableName  VARCHAR(50) NOT NULL    -- e.g. 'ParkData'\n)\nWITH\n(\n  DISTRIBUTION = HASH(FolderName)\n);\nGO\n\n-- Add the primary key constraint as NOT ENFORCED\nALTER TABLE Control.FolderTableMap\nADD CONSTRAINT PK_FolderTableMap\n  PRIMARY KEY NONCLUSTERED (FolderName) NOT ENFORCED;\nGO\n\n\n-- Populate the mapping table with individual INSERTs\nINSERT INTO Control.FolderTableMap (FolderName, TableName)  \nVALUES ('park-data',     'ParkData');  \n\nINSERT INTO Control.FolderTableMap (FolderName, TableName)  \nVALUES ('squirrel-data', 'SquirrelData');  \n\nINSERT INTO Control.FolderTableMap (FolderName, TableName)  \nVALUES ('visitor-log',   'VisitorLog');  \nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

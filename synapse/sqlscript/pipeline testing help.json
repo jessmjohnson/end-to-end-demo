@@ -1,0 +1,17 @@
+{
+	"name": "pipeline testing help",
+	"properties": {
+		"content": {
+			"query": "SELECT 'Bronze' AS StageName, 'ParkData' AS TableName, (SELECT COUNT(*) FROM Bronze.ParkData) AS NumRows\nUNION ALL\nSELECT 'Bronze' AS StageName, 'SquirrelData' AS TableName, (SELECT COUNT(*) FROM Bronze.SquirrelData) AS NumRows\nUNION ALL\nSELECT 'Bronze' AS StageName, 'VisitorLog' AS TableName, (SELECT COUNT(*) FROM Bronze.VisitorLog) AS NumRows\nUNION ALL\nSELECT 'Silver' AS StageName, 'ParkObservations' AS TableName, (SELECT COUNT(*) FROM Silver.ParkObservations) AS NumRows\nUNION ALL\nSELECT 'Silver' AS StageName, 'SquirrelObservations' AS TableName, (SELECT COUNT(*) FROM Silver.SquirrelObservations) AS NumRows\nUNION ALL\nSELECT 'Silver' AS StageName, 'VisitorLog' AS TableName, (SELECT COUNT(*) FROM Silver.VisitorLog) AS NumRows\nUNION ALL\nSELECT 'Gold' AS StageName, 'dimDate' AS TableName, (SELECT COUNT(*) FROM Gold.dimDate) AS NumRows\nUNION ALL\nSELECT 'Gold' AS StageName, 'dimPark' AS TableName, (SELECT COUNT(*) FROM Gold.dimPark) AS NumRows\nUNION ALL\nSELECT 'Gold' AS StageName, 'dimSquirrel' AS TableName, (SELECT COUNT(*) FROM Gold.dimSquirrel) AS NumRows\nUNION ALL\nSELECT 'Gold' AS StageName, 'dimVisitorType' AS TableName, (SELECT COUNT(*) FROM Gold.dimVisitorType) AS NumRows\nUNION ALL\nSELECT 'Gold' AS StageName, 'factSquirrelObservations' AS TableName, (SELECT COUNT(*) FROM Gold.factSquirrelObservations) AS NumRows\nUNION ALL\nSELECT 'Gold' AS StageName, 'factVisitorLog' AS TableName, (SELECT COUNT(*) FROM Gold.factVisitorLog) AS NumRows\n\n\n/*\nTRUNCATE TABLE Bronze.ParkData;\nTRUNCATE TABLE Bronze.SquirrelData;\nTRUNCATE TABLE Bronze.VisitorLog;\nTRUNCATE TABLE Silver.ParkObservations;\nTRUNCATE TABLE Silver.SquirrelObservations;\nTRUNCATE TABLE Silver.VisitorLog;\nTRUNCATE TABLE Gold.dimPark;\nTRUNCATE TABLE Gold.dimSquirrel;\nTRUNCATE TABLE Gold.dimVisitorType;\nTRUNCATE TABLE Gold.factSquirrelObservations;\nTRUNCATE TABLE Gold.factVisitorLog;\n\n*/\n\n/*\nALTER DATABASE [dspendtoenddemo]\nSET QUERY_STORE = ON;\n*/\n\n--SELECT * FROM Telemetry.PipelineLog WHERE EventType = 'Success' ORDER BY EventTime;\n\n\n/*\nUPDATE Control.FileList\nSET Status = 'Pending'\nWHERE FileName LIKE '%20250510%'\n\nSELECT * FROM Control.FileList\nWHERE FileName LIKE '%20250510%'\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,357 @@
+{
+	"name": "GenerateDailyData_SquirrelDataSet",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "splendtoenddemo",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": true,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "true",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "f042637b-4a8f-4053-ac8c-a93f0dfa7076"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b32014a3-d670-48c9-9172-5c517f4411fd/resourceGroups/rg-end-to-end-demo/providers/Microsoft.Synapse/workspaces/synwendtoenddemo/bigDataPools/splendtoenddemo",
+				"name": "splendtoenddemo",
+				"type": "Spark",
+				"endpoint": "https://synwendtoenddemo.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/splendtoenddemo",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 15
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Daily Synthetic CSV Generator  \n",
+					"Runs in a Synapse Spark pool and lands three referential‑integrity‑safe CSVs in ADLS G2.  \n",
+					"*Park ID / Area ID relationships are preserved across files.*"
+				]
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## 0 . Imports & Config  \n",
+					"Tiny helper libs only (`pandas`, `notebookutils`).  \n",
+					"Edit **`storage`**, **`ROW_TARGETS`**, or pass a widget value for `RUN_DATE`."
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"# -----------------------------------------\n",
+					"# PARAMETERS\n",
+					"# -----------------------------------------\n",
+					"# Pipeline passes RUN_DATE as either\n",
+					"#   • \"\"              (blank)         ← default\n",
+					"#   • \"20250625\"      (yyyyMMdd)\n",
+					"#   • \"2025-06-25\"    (yyyy-MM-dd)\n",
+					"\n",
+					"param_run_date = \"\""
+				],
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"tags": []
+				},
+				"source": [
+					"\n",
+					"from datetime import datetime, date\n",
+					"\n",
+					"raw = str(param_run_date)            # after the pipeline runs, this is overwritten\n",
+					"if not raw:\n",
+					"    RUN_DATE = date.today()\n",
+					"elif isinstance(param_run_date, date):\n",
+					"    RUN_DATE = param_run_date\n",
+					"else:\n",
+					"    fmt = \"%Y%m%d\" if len(raw) == 8 else \"%Y-%m-%d\"\n",
+					"    RUN_DATE = datetime.strptime(raw, fmt).date()\n",
+					"print(\"🏷️  RUN_DATE =\", RUN_DATE)        # e.g. 2025-06-10\n",
+					""
+				],
+				"execution_count": 19
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"tags": []
+				},
+				"source": [
+					"import pandas as pd, random\n",
+					"from datetime import timedelta\n",
+					"from notebookutils import mssparkutils\n",
+					"\n",
+					"storage = \"stendtoenddemo\"      # <‑‑ your ADLS Gen2 account\n",
+					"\n",
+					"# Path roots\n",
+					"seed_root = f\"abfss://seed@{storage}.dfs.core.windows.net/\"\n",
+					"out_root  = f\"abfss://bronze@{storage}.dfs.core.windows.net/\"\n",
+					"\n",
+					"ROW_TARGETS = {\n",
+					"    \"park-data\":     1_000,\n",
+					"    \"squirrel-data\": 5_000,\n",
+					"    \"visitor-log\":   5_000,\n",
+					"}\n",
+					"\n",
+					"print(f\"🗓️  Generating data for {RUN_DATE} → {out_root}  (storage = {storage})\")\n",
+					""
+				],
+				"execution_count": 20
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## 1 . Load Master Dimension (`park-data.csv`)  \n",
+					"We treat **park‑data** as the authoritative list of valid `ParkID` + `AreaID` combos.  \n",
+					"Everything else samples from this lookup to keep foreign‑keys valid."
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# 1. Load master dimension (park-data)\n",
+					"park_seed = pd.read_csv(seed_root + \"park-data.csv\", encoding=\"latin1\")\n",
+					"park_seed[\"ParkID\"] = park_seed[\"ParkID\"].astype(int)\n",
+					"\n",
+					"# List of valid (ParkID, AreaID, ParkName) tuples\n",
+					"park_dim = park_seed[[\"ParkID\", \"AreaID\", \"ParkName\"]].drop_duplicates().values.tolist()\n",
+					"\n",
+					"def pick_park():\n",
+					"    \"\"\"Return a random (ParkID, AreaID, ParkName) combo.\"\"\"\n",
+					"    return random.choice(park_dim)"
+				],
+				"execution_count": 21
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## 2 . Utility Functions  \n",
+					"* `rand_time()` – random time between 06:00 and 22:00  \n",
+					"* `write_df()` – Spark‑writes one CSV (`coalesce(1)`)  \n",
+					"* `pick_park()` – already defined above"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# 2. Utility functions\n",
+					"def rand_time(start=\"06:00:00\", end=\"22:00:00\"):\n",
+					"    s, e = [datetime.strptime(t, \"%H:%M:%S\") for t in (start, end)]\n",
+					"    return (s + timedelta(seconds=random.randint(0, int((e - s).total_seconds())))).time()"
+				],
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"def write_df(df: pd.DataFrame, name: str):\n",
+					"    # raw/<dataset>/daily/<YYYYMMDD>/   ← directory, ends with \"/\"\n",
+					"    full_path = f\"{out_root}{name}/daily/{RUN_DATE:%Y%m%d}/\"\n",
+					"\n",
+					"    # Ensure the parent folders exist (optional but tidy)\n",
+					"    # e.g. bronze/park-data/daily/\n",
+					"    mssparkutils.fs.mkdirs(f\"{out_root}{name}/daily/\")\n",
+					"\n",
+					"    (spark.createDataFrame(df)\n",
+					"          .coalesce(1)               # one CSV part‑file\n",
+					"          .write.mode(\"overwrite\")\n",
+					"          .option(\"header\", \"true\")\n",
+					"          .csv(full_path))\n",
+					"\n",
+					"    print(\"✅  wrote →\", full_path)"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## 3 . Generate Today’s **Park Data** (1 000 rows)  \n",
+					"Creates new rows for the dimension itself: date, start/end times, total minutes."
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# 3. Generate today's Park Data\n",
+					"def gen_park(n_rows: int):\n",
+					"    rows = []\n",
+					"    for _ in range(n_rows):\n",
+					"        pk, area, pname = pick_park()\n",
+					"        st = rand_time()\n",
+					"        et = (datetime.combine(RUN_DATE, st) +\n",
+					"              timedelta(minutes=random.randint(20, 90))).time()\n",
+					"        rows.append({\n",
+					"            \"ParkID\":    pk,\n",
+					"            \"AreaID\":    area,\n",
+					"            \"ParkName\":  pname,\n",
+					"            \"Date\":      RUN_DATE.isoformat(),\n",
+					"            \"StartTime\": st.strftime(\"%H:%M:%S\"),\n",
+					"            \"EndTime\":   et.strftime(\"%H:%M:%S\"),\n",
+					"            \"TotalTime\": int((datetime.combine(RUN_DATE, et) -\n",
+					"                              datetime.combine(RUN_DATE, st)).seconds // 60)\n",
+					"        })\n",
+					"    return pd.DataFrame(rows)\n",
+					"\n",
+					"write_df(gen_park(ROW_TARGETS[\"park-data\"]), \"park-data\")"
+				],
+				"execution_count": 24
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## 4 . Generate Today’s **Squirrel Data** (5 000 rows)  \n",
+					"Randomly samples the seed, then re‑keys every row to a valid park."
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# 4. Generate today's Squirrel Data\n",
+					"squirrel_seed = pd.read_csv(seed_root + \"squirrel-data.csv\", encoding=\"latin1\")\n",
+					"\n",
+					"def gen_squirrel(n_rows: int):\n",
+					"    base = squirrel_seed.sample(n=n_rows, replace=True).reset_index(drop=True)\n",
+					"    parks = [pick_park() for _ in range(n_rows)]\n",
+					"    base[\"ParkID\"], base[\"AreaID\"], base[\"ParkName\"] = zip(*parks)\n",
+					"    base[\"Date\"] = RUN_DATE.isoformat()\n",
+					"    return base\n",
+					"\n",
+					"write_df(gen_squirrel(ROW_TARGETS[\"squirrel-data\"]), \"squirrel-data\")"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## 5 . Generate Today’s **Visitor Log** (5 000 rows)  \n",
+					"Samples the visitor seed, injects valid `ParkID` and today’s timestamp."
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# 5. Generate today's Visitor Log\n",
+					"vis_path = next(p.path for p in mssparkutils.fs.ls(seed_root)\n",
+					"                if p.name.startswith(\"visitor-log\"))\n",
+					"visitor_seed = pd.read_csv(vis_path, encoding=\"latin1\")\n",
+					"\n",
+					"def gen_visits(n_rows: int):\n",
+					"    base = visitor_seed.sample(n=n_rows, replace=True).reset_index(drop=True)\n",
+					"    base[\"ParkID\"] = [pk for pk, *_ in (pick_park() for _ in range(n_rows))]\n",
+					"    base[\"VisitTimestamp\"] = [f\"{RUN_DATE} {rand_time()}\" for _ in range(n_rows)]\n",
+					"    return base\n",
+					"\n",
+					"write_df(gen_visits(ROW_TARGETS[\"visitor-log\"]), \"visitor-log\")"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## 6 . Clean Shutdown  \n",
+					"Stopping the Spark session helps Auto‑pause trigger in ~5 minutes."
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# 6. Clean shutdown\n",
+					"spark.stop()"
+				],
+				"execution_count": 27
+			}
+		]
+	}
+}

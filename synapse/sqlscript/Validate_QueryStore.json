@@ -1,0 +1,17 @@
+{
+	"name": "Validate_QueryStore",
+	"properties": {
+		"content": {
+			"query": "\nSELECT desired_state_desc,actual_state_desc, readonly_reason, current_storage_size_mb, max_storage_size_mb, max_plans_per_query \nFROM sys.database_query_store_options;\n\n-- desired_state_desc: Indicates the requested operation mode (e.g., READ_WRITE, READ_ONLY, OFF).\n-- actual_state_desc: Shows the current operation mode of the Query Store.\n-- readonly_reason: Provides reasons if the Query Store is in read-only mode 1 2.V",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "dspendtoenddemo",
+				"poolName": "dspendtoenddemo"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
