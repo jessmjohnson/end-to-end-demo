@@ -5,7 +5,14 @@
 			{
 				"name": "Run Generate Squirrel Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Set variable run_date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -25,7 +32,7 @@
 					"parameters": {
 						"param_run_date": {
 							"value": {
-								"value": "@formatDateTime(\r\nconcat( \r\n    substring(pipeline().parameters.p_run_date,0,4),'-',\r\n    substring(pipeline().parameters.p_run_date,4,2),'-',\r\n    substring(pipeline().parameters.p_run_date,6,2)),\r\n    'yyyy-MM-dd')",
+								"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
 								"type": "Expression"
 							},
 							"type": "string"
@@ -51,6 +58,23 @@
 				"linkedServiceName": {
 					"referenceName": "LS_ASA_synwendtoenddemo",
 					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Set variable run_date",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "dummy_var",
+					"value": {
+						"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
+						"type": "Expression"
+					}
 				}
 			}
 		],
