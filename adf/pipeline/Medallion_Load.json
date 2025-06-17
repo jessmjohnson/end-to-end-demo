@@ -8,7 +8,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Resume Dedicated SQL Pool",
+						"activity": "Resume",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -813,8 +813,8 @@
 				}
 			},
 			{
-				"name": "Resume Dedicated SQL Pool",
-				"type": "WebActivity",
+				"name": "Resume",
+				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
 						"activity": "Set Subscription ID Variable",
@@ -824,77 +824,49 @@
 					}
 				],
 				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"method": "POST",
-					"headers": {
-						"Content-Type": "application/json"
+					"pipeline": {
+						"referenceName": "Dedicated Pool Resume",
+						"type": "PipelineReference"
 					},
-					"url": {
-						"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  variables('var_secret_subscription_id'),\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'resume?api-version=2021-06-01-preview'\n)",
-						"type": "Expression"
-					},
-					"authentication": {
-						"type": "MSI",
-						"resource": "https://management.azure.com/"
+					"waitOnCompletion": true,
+					"parameters": {
+						"param_subscription_id": {
+							"value": "@activity('Get Key Vault Secret').output.value",
+							"type": "Expression"
+						}
 					}
 				}
 			},
 			{
-				"name": "Pause Dedicated SQL Pool",
-				"type": "WebActivity",
+				"name": "Pause",
+				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
 						"activity": "Log End - Gold Load - Success",
 						"dependencyConditions": [
 							"Succeeded"
 						]
-					},
-					{
-						"activity": "Execute Gold Load",
-						"dependencyConditions": [
-							"Failed"
-						]
-					},
-					{
-						"activity": "Execute Silver Load",
-						"dependencyConditions": [
-							"Failed"
-						]
-					},
-					{
-						"activity": "Execute Bronze Load",
-						"dependencyConditions": [
-							"Failed"
-						]
 					}
 				],
 				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"method": "POST",
-					"headers": {
-						"Content-Type": "application/json"
+					"pipeline": {
+						"referenceName": "Dedicated Pool Pause",
+						"type": "PipelineReference"
 					},
-					"url": {
-						"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  variables('var_secret_subscription_id'),\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'pause?api-version=2021-06-01-preview'\n)",
-						"type": "Expression"
-					},
-					"authentication": {
-						"type": "MSI",
-						"resource": "https://management.azure.com/"
+					"waitOnCompletion": true,
+					"parameters": {
+						"param_subscription_id": {
+							"value": "@variables('var_secret_subscription_id')",
+							"type": "Expression"
+						}
 					}
 				}
 			}
