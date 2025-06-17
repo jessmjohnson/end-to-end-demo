@@ -88,6 +88,9 @@
 				"type": "String"
 			}
 		},
+		"folder": {
+			"name": "Utilities"
+		},
 		"annotations": []
 	}
 }
