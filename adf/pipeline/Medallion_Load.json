@@ -6,7 +6,14 @@
 				"name": "Log Start - Bronze Load",
 				"description": "",
 				"type": "SqlServerStoredProcedure",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Resume Dedicated SQL Pool",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -759,8 +766,147 @@
 					},
 					"waitOnCompletion": true
 				}
+			},
+			{
+				"name": "Get Key Vault Secret",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": "https://akv-endtoenddemo.vault.azure.net/secrets/subscription-id?api-version=7.5",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
+				}
+			},
+			{
+				"name": "Set Subscription ID Variable",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Get Key Vault Secret",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": true,
+					"secureInput": true
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "var_secret_subscription_id",
+					"value": {
+						"value": "@activity('Get Key Vault Secret').output.value",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Resume Dedicated SQL Pool",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Set Subscription ID Variable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"url": {
+						"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  variables('var_secret_subscription_id'),\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'resume?api-version=2021-06-01-preview'\n)",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com/"
+					}
+				}
+			},
+			{
+				"name": "Pause Dedicated SQL Pool",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Log End - Gold Load - Success",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Execute Gold Load",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "Execute Silver Load",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "Execute Bronze Load",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"url": {
+						"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  variables('var_secret_subscription_id'),\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'pause?api-version=2021-06-01-preview'\n)",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com/"
+					}
+				}
 			}
 		],
+		"variables": {
+			"var_debug": {
+				"type": "String"
+			},
+			"var_secret_subscription_id": {
+				"type": "String"
+			}
+		},
 		"folder": {
 			"name": "Medallion"
 		},
