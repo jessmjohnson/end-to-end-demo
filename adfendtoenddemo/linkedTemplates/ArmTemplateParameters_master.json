@@ -8,6 +8,9 @@
 		"LS_ADLS_stendtoenddemo_properties_typeProperties_url": {
 			"value": "https://stendtoenddemo.dfs.core.windows.net/"
 		},
+		"LS_AKV_akvendtoenddemo_properties_typeProperties_baseUrl": {
+			"value": "https://akv-endtoenddemo.vault.azure.net/"
+		},
 		"LS_ASA_dspendtoenddemo_properties_typeProperties_server": {
 			"value": "synwendtoenddemo.sql.azuresynapse.net"
 		},

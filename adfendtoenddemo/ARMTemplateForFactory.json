@@ -11,6 +11,10 @@
 			"type": "string",
 			"defaultValue": "https://stendtoenddemo.dfs.core.windows.net/"
 		},
+		"LS_AKV_akvendtoenddemo_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://akv-endtoenddemo.vault.azure.net/"
+		},
 		"LS_ASA_dspendtoenddemo_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "synwendtoenddemo.sql.azuresynapse.net"
@@ -855,22 +859,15 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DailyCSVGenerator_SquirrelDataset')]",
+			"name": "[concat(parameters('factoryName'), '/Dedicated Pool Pause')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Run Generate Squirrel Data",
-						"type": "SynapseNotebook",
-						"dependsOn": [
-							{
-								"activity": "Set variable run_date",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
+						"name": "Get Dedicated SQL Pool Status",
+						"type": "WebActivity",
+						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -880,59 +877,78 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"notebook": {
-								"referenceName": {
-									"value": "GenerateDailyData_SquirrelDataSet",
-									"type": "Expression"
-								},
-								"type": "NotebookReference"
+							"method": "GET",
+							"headers": {
+								"Content-Type": "application/json"
 							},
-							"parameters": {
-								"param_run_date": {
-									"value": {
-										"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
-										"type": "Expression"
-									},
-									"type": "string"
-								}
+							"url": {
+								"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  pipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo',\n  '?api-version=2021-06-01'\n)",
+								"type": "Expression"
 							},
-							"snapshot": true,
-							"sparkPool": {
-								"referenceName": {
-									"value": "splendtoenddemo",
-									"type": "Expression"
-								},
-								"type": "BigDataPoolReference"
-							},
-							"executorSize": "Small",
-							"conf": {
-								"spark.dynamicAllocation.enabled": null,
-								"spark.dynamicAllocation.minExecutors": null,
-								"spark.dynamicAllocation.maxExecutors": null
-							},
-							"driverSize": "Small",
-							"numExecutors": null
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_synwendtoenddemo",
-							"type": "LinkedServiceReference"
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
 						}
 					},
 					{
-						"name": "Set variable run_date",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
+						"name": "If Condition Paused",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Dedicated SQL Pool Status",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"userProperties": [],
 						"typeProperties": {
-							"variableName": "dummy_var",
-							"value": {
-								"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
+							"expression": {
+								"value": "@equals(activity('Get Dedicated SQL Pool Status').output.properties.status, 'Paused')",
 								"type": "Expression"
-							}
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Pause Dedicated SQL Pool",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"method": "POST",
+										"headers": {
+											"Content-Type": "application/json"
+										},
+										"url": {
+											"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  pipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'pause?api-version=2021-06-01'\n)",
+											"type": "Expression"
+										},
+										"body": {},
+										"authentication": {
+											"type": "MSI",
+											"resource": "https://management.azure.com/"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Default - Wait",
+									"type": "Wait",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 1
+									}
+								}
+							]
 						}
 					}
 				],
@@ -940,20 +956,125 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"p_run_date": {
+					"param_subscription_id": {
 						"type": "string"
 					}
 				},
-				"variables": {
-					"dummy_var": {
-						"type": "String"
-					}
+				"folder": {
+					"name": "Utilities"
 				},
 				"annotations": []
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_synwendtoenddemo')]"
-			]
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dedicated Pool Resume')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Dedicated SQL Pool Status",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": {
+								"value": "@concat(\n  'https://management.azure.com/subscriptions/',\npipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo',\n  '?api-version=2021-06-01'\n)",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					},
+					{
+						"name": "If Condition Running",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Dedicated SQL Pool Status",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Get Dedicated SQL Pool Status').output.properties.status, 'Online')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Resume Dedicated SQL Pool",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"method": "POST",
+										"headers": {
+											"Content-Type": "application/json"
+										},
+										"url": {
+											"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  pipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'resume?api-version=2021-06-01'\n)",
+											"type": "Expression"
+										},
+										"body": {},
+										"authentication": {
+											"type": "MSI",
+											"resource": "https://management.azure.com/"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Default - Wait",
+									"type": "Wait",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 1
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"param_subscription_id": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Utilities"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/Dim_Load')]",
@@ -3119,7 +3240,14 @@
 						"name": "Log Start - Bronze Load",
 						"description": "",
 						"type": "SqlServerStoredProcedure",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Resume",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -3874,10 +4002,122 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
+					},
+					{
+						"name": "Get Key Vault Secret",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": "https://akv-endtoenddemo.vault.azure.net/secrets/subscription-id?api-version=7.5",
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://vault.azure.net"
+							}
+						}
+					},
+					{
+						"name": "Set Subscription ID Variable",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Get Key Vault Secret",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": true,
+							"secureInput": true
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "var_secret_subscription_id",
+							"value": {
+								"value": "@activity('Get Key Vault Secret').output.value",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Resume",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Set Subscription ID Variable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Dedicated Pool Resume",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"param_subscription_id": {
+									"value": "@activity('Get Key Vault Secret').output.value",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Pause",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Log End - Gold Load - Success",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Dedicated Pool Pause",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"param_subscription_id": {
+									"value": "@variables('var_secret_subscription_id')",
+									"type": "Expression"
+								}
+							}
+						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"var_debug": {
+						"type": "String"
+					},
+					"var_secret_subscription_id": {
+						"type": "String"
+					}
 				},
 				"folder": {
 					"name": "Medallion"
@@ -3889,7 +4129,9 @@
 				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_dspendtoenddemo')]",
 				"[concat(variables('factoryId'), '/pipelines/Bronze_Load')]",
 				"[concat(variables('factoryId'), '/pipelines/Silver_Load')]",
-				"[concat(variables('factoryId'), '/pipelines/Gold_Load')]"
+				"[concat(variables('factoryId'), '/pipelines/Gold_Load')]",
+				"[concat(variables('factoryId'), '/pipelines/Dedicated Pool Resume')]",
+				"[concat(variables('factoryId'), '/pipelines/Dedicated Pool Pause')]"
 			]
 		},
 		{
@@ -4294,6 +4536,110 @@
 				"[concat(variables('factoryId'), '/datasets/DS_dspendtoenddemo_Table')]",
 				"[concat(variables('factoryId'), '/pipelines/Instrumentation_Run')]",
 				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_dspendtoenddemo')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Squirrel CSV Data Generator')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Run Generate Squirrel Data",
+						"type": "SynapseNotebook",
+						"dependsOn": [
+							{
+								"activity": "Set variable run_date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": {
+									"value": "GenerateDailyData_SquirrelDataSet",
+									"type": "Expression"
+								},
+								"type": "NotebookReference"
+							},
+							"parameters": {
+								"param_run_date": {
+									"value": {
+										"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
+										"type": "Expression"
+									},
+									"type": "string"
+								}
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": {
+									"value": "splendtoenddemo",
+									"type": "Expression"
+								},
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": null,
+								"spark.dynamicAllocation.minExecutors": null,
+								"spark.dynamicAllocation.maxExecutors": null
+							},
+							"driverSize": "Small",
+							"numExecutors": null
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_synwendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Set variable run_date",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "dummy_var",
+							"value": {
+								"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_run_date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"dummy_var": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Utilities"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_synwendtoenddemo')]"
 			]
 		},
 		{
@@ -6131,6 +6477,19 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_AKV_akvendtoenddemo')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_AKV_akvendtoenddemo_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_ASA_dspendtoenddemo')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -6172,7 +6531,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "DailyCSVGenerator_SquirrelDataset",
+							"referenceName": "Squirrel CSV Data Generator",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -6197,7 +6556,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/DailyCSVGenerator_SquirrelDataset')]"
+				"[concat(variables('factoryId'), '/pipelines/Squirrel CSV Data Generator')]"
 			]
 		},
 		{

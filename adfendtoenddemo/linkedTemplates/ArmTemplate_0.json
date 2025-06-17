@@ -11,6 +11,10 @@
 			"type": "string",
 			"defaultValue": "https://stendtoenddemo.dfs.core.windows.net/"
 		},
+		"LS_AKV_akvendtoenddemo_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://akv-endtoenddemo.vault.azure.net/"
+		},
 		"LS_ASA_dspendtoenddemo_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "synwendtoenddemo.sql.azuresynapse.net"
@@ -29,6 +33,224 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Dedicated Pool Pause')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Dedicated SQL Pool Status",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": {
+								"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  pipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo',\n  '?api-version=2021-06-01'\n)",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					},
+					{
+						"name": "If Condition Paused",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Dedicated SQL Pool Status",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Get Dedicated SQL Pool Status').output.properties.status, 'Paused')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Pause Dedicated SQL Pool",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"method": "POST",
+										"headers": {
+											"Content-Type": "application/json"
+										},
+										"url": {
+											"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  pipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'pause?api-version=2021-06-01'\n)",
+											"type": "Expression"
+										},
+										"body": {},
+										"authentication": {
+											"type": "MSI",
+											"resource": "https://management.azure.com/"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Default - Wait",
+									"type": "Wait",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 1
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"param_subscription_id": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Utilities"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dedicated Pool Resume')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Dedicated SQL Pool Status",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": {
+								"value": "@concat(\n  'https://management.azure.com/subscriptions/',\npipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo',\n  '?api-version=2021-06-01'\n)",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://management.azure.com/"
+							}
+						}
+					},
+					{
+						"name": "If Condition Running",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Dedicated SQL Pool Status",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Get Dedicated SQL Pool Status').output.properties.status, 'Online')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Resume Dedicated SQL Pool",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"method": "POST",
+										"headers": {
+											"Content-Type": "application/json"
+										},
+										"url": {
+											"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  pipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo/',\n  'resume?api-version=2021-06-01'\n)",
+											"type": "Expression"
+										},
+										"body": {},
+										"authentication": {
+											"type": "MSI",
+											"resource": "https://management.azure.com/"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Default - Wait",
+									"type": "Wait",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 1
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"param_subscription_id": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Utilities"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_ADLS_stendtoenddemo')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -37,6 +259,19 @@
 				"type": "AzureBlobFS",
 				"typeProperties": {
 					"url": "[parameters('LS_ADLS_stendtoenddemo_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_AKV_akvendtoenddemo')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_AKV_akvendtoenddemo_properties_typeProperties_baseUrl')]"
 				}
 			},
 			"dependsOn": []
@@ -72,107 +307,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DailyCSVGenerator_SquirrelDataset')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Run Generate Squirrel Data",
-						"type": "SynapseNotebook",
-						"dependsOn": [
-							{
-								"activity": "Set variable run_date",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebook": {
-								"referenceName": {
-									"value": "GenerateDailyData_SquirrelDataSet",
-									"type": "Expression"
-								},
-								"type": "NotebookReference"
-							},
-							"parameters": {
-								"param_run_date": {
-									"value": {
-										"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
-										"type": "Expression"
-									},
-									"type": "string"
-								}
-							},
-							"snapshot": true,
-							"sparkPool": {
-								"referenceName": {
-									"value": "splendtoenddemo",
-									"type": "Expression"
-								},
-								"type": "BigDataPoolReference"
-							},
-							"executorSize": "Small",
-							"conf": {
-								"spark.dynamicAllocation.enabled": null,
-								"spark.dynamicAllocation.minExecutors": null,
-								"spark.dynamicAllocation.maxExecutors": null
-							},
-							"driverSize": "Small",
-							"numExecutors": null
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_synwendtoenddemo",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Set variable run_date",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "dummy_var",
-							"value": {
-								"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"p_run_date": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"dummy_var": {
-						"type": "String"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_synwendtoenddemo')]"
-			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/Instrumentation_Run')]",
@@ -448,6 +582,110 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_dspendtoenddemo')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Squirrel CSV Data Generator')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Run Generate Squirrel Data",
+						"type": "SynapseNotebook",
+						"dependsOn": [
+							{
+								"activity": "Set variable run_date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": {
+									"value": "GenerateDailyData_SquirrelDataSet",
+									"type": "Expression"
+								},
+								"type": "NotebookReference"
+							},
+							"parameters": {
+								"param_run_date": {
+									"value": {
+										"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
+										"type": "Expression"
+									},
+									"type": "string"
+								}
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": {
+									"value": "splendtoenddemo",
+									"type": "Expression"
+								},
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": null,
+								"spark.dynamicAllocation.minExecutors": null,
+								"spark.dynamicAllocation.maxExecutors": null
+							},
+							"driverSize": "Small",
+							"numExecutors": null
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASA_synwendtoenddemo",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Set variable run_date",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "dummy_var",
+							"value": {
+								"value": "@if(\n    empty(string(pipeline().parameters.p_run_date)),\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    formatDateTime(\n        concat(\n            substring(pipeline().parameters.p_run_date, 0, 4),'-',\n            substring(pipeline().parameters.p_run_date, 4, 2),'-',\n            substring(pipeline().parameters.p_run_date, 6, 2)\n        ),\n        'yyyy-MM-dd'\n    )\n)\n",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_run_date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"dummy_var": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Utilities"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_synwendtoenddemo')]"
 			]
 		},
 		{
@@ -2767,648 +3005,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_dspendtoenddemo')]",
 				"[concat(variables('factoryId'), '/datasets/DS_dspendtoenddemo_Table')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/factSquirrelObservations_Load')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Log Start",
-						"description": "record when the gold load for a dimPark begins",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
-							"storedProcedureParameters": {
-								"PipelineRunId": {
-									"value": {
-										"value": "@pipeline().RunId",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"PipelineName": {
-									"value": "Gold_Load",
-									"type": "String"
-								},
-								"StageName": {
-									"value": {
-										"value": "@concat('Load Gold - ', 'factSquirrelObservations')",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"ActivityName": {
-									"value": "TransformToGold",
-									"type": "String"
-								},
-								"EventType": {
-									"value": "Begin",
-									"type": "String"
-								},
-								"EventTime": {
-									"value": {
-										"value": "@utcNow()",
-										"type": "Expression"
-									},
-									"type": "Datetime"
-								},
-								"DurationSec": {
-									"value": null,
-									"type": "Int64"
-								},
-								"RowsAffected": {
-									"value": null,
-									"type": "Int64"
-								},
-								"Status": {
-									"value": "InProgress",
-									"type": "String"
-								},
-								"Message": {
-									"value": null,
-									"type": "String"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_dspendtoenddemo",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Log End - Success",
-						"description": "record when the Silver load for a given SilverTable ends.",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [
-							{
-								"activity": "Run Transform Get Affected Rows",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
-							"storedProcedureParameters": {
-								"PipelineRunId": {
-									"value": {
-										"value": "@pipeline().RunId",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"PipelineName": {
-									"value": "Silver_Load",
-									"type": "String"
-								},
-								"StageName": {
-									"value": {
-										"value": "@concat('Loaded to Gold - ', 'factSquirrelObservations')",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"ActivityName": {
-									"value": "TransformToGold",
-									"type": "String"
-								},
-								"EventType": {
-									"value": "Success",
-									"type": "String"
-								},
-								"EventTime": {
-									"value": {
-										"value": "@utcNow()",
-										"type": "Expression"
-									},
-									"type": "Datetime"
-								},
-								"DurationSec": {
-									"value": {
-										"value": "@activity('Run Transform Get Affected Rows').output.firstRow.DurationSeconds",
-										"type": "Expression"
-									},
-									"type": "Int64"
-								},
-								"RowsAffected": {
-									"value": {
-										"value": "@activity('Run Transform Get Affected Rows').output.firstRow.RowsInserted",
-										"type": "Expression"
-									},
-									"type": "Int64"
-								},
-								"Status": {
-									"value": "Completed",
-									"type": "String"
-								},
-								"Message": {
-									"value": null,
-									"type": "String"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_dspendtoenddemo",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Log End - Fail",
-						"description": "record when the Silver load for a given Bronze table ends with a failure.",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [
-							{
-								"activity": "Run Transform Get Affected Rows",
-								"dependencyConditions": [
-									"Failed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
-							"storedProcedureParameters": {
-								"PipelineRunId": {
-									"value": {
-										"value": "@pipeline().RunId",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"PipelineName": {
-									"value": "Gold_Load",
-									"type": "String"
-								},
-								"StageName": {
-									"value": {
-										"value": "@concat('Failed to Load to Gold - ', 'factSquirrelObservations')",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"ActivityName": {
-									"value": "Run Transforms",
-									"type": "String"
-								},
-								"EventType": {
-									"value": "Error",
-									"type": "String"
-								},
-								"EventTime": {
-									"value": {
-										"value": "@utcNow()",
-										"type": "Expression"
-									},
-									"type": "Datetime"
-								},
-								"DurationSec": {
-									"value": null,
-									"type": "Int64"
-								},
-								"RowsAffected": {
-									"value": null,
-									"type": "Int64"
-								},
-								"Status": {
-									"value": "Failed",
-									"type": "String"
-								},
-								"Message": {
-									"value": {
-										"value": "@string(\nactivity('Run Transform Get Affected Rows').output.errors[0].message\n)",
-										"type": "Expression"
-									},
-									"type": "String"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_dspendtoenddemo",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Run Transform Get Affected Rows",
-						"type": "Lookup",
-						"dependsOn": [
-							{
-								"activity": "Log Start",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlDWSource",
-								"sqlReaderQuery": {
-									"value": "@concat(\n  'EXECUTE ',\npipeline().parameters.param_processStage,\n  '.usp_LoadFactSquirrelObservations'\n)",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_dspendtoenddemo_Table",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"param_ProcessStage": {
-						"type": "string",
-						"defaultValue": "Gold"
-					}
-				},
-				"folder": {
-					"name": "Facts"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-05-22T18:05:55Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_dspendtoenddemo')]",
-				"[concat(variables('factoryId'), '/datasets/DS_dspendtoenddemo_Table')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/factVisitorLog_Load')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Log Start",
-						"description": "record when the gold load for a dimPark begins",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
-							"storedProcedureParameters": {
-								"PipelineRunId": {
-									"value": {
-										"value": "@pipeline().RunId",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"PipelineName": {
-									"value": "Gold_Load",
-									"type": "String"
-								},
-								"StageName": {
-									"value": {
-										"value": "@concat('Load Gold - ', 'factVisitorLog')",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"ActivityName": {
-									"value": "TransformToGold",
-									"type": "String"
-								},
-								"EventType": {
-									"value": "Begin",
-									"type": "String"
-								},
-								"EventTime": {
-									"value": {
-										"value": "@utcNow()",
-										"type": "Expression"
-									},
-									"type": "Datetime"
-								},
-								"DurationSec": {
-									"value": null,
-									"type": "Int64"
-								},
-								"RowsAffected": {
-									"value": null,
-									"type": "Int64"
-								},
-								"Status": {
-									"value": "InProgress",
-									"type": "String"
-								},
-								"Message": {
-									"value": null,
-									"type": "String"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_dspendtoenddemo",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Log End - Success",
-						"description": "record when the Silver load for a given SilverTable ends.",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [
-							{
-								"activity": "Run Transform Get Affected Rows",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
-							"storedProcedureParameters": {
-								"PipelineRunId": {
-									"value": {
-										"value": "@pipeline().RunId",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"PipelineName": {
-									"value": "Gold_Load",
-									"type": "String"
-								},
-								"StageName": {
-									"value": {
-										"value": "@concat('Loaded to Gold - ', 'factVisitorLog')",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"ActivityName": {
-									"value": "TransformToGold",
-									"type": "String"
-								},
-								"EventType": {
-									"value": "Success",
-									"type": "String"
-								},
-								"EventTime": {
-									"value": {
-										"value": "@utcNow()",
-										"type": "Expression"
-									},
-									"type": "Datetime"
-								},
-								"DurationSec": {
-									"value": {
-										"value": "@activity('Run Transform Get Affected Rows').output.firstRow.DurationSeconds",
-										"type": "Expression"
-									},
-									"type": "Int64"
-								},
-								"RowsAffected": {
-									"value": {
-										"value": "@activity('Run Transform Get Affected Rows').output.firstRow.RowsInserted",
-										"type": "Expression"
-									},
-									"type": "Int64"
-								},
-								"Status": {
-									"value": "Completed",
-									"type": "String"
-								},
-								"Message": {
-									"value": null,
-									"type": "String"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_dspendtoenddemo",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Log End - Fail",
-						"description": "record when the Silver load for a given Bronze table ends with a failure.",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [
-							{
-								"activity": "Run Transform Get Affected Rows",
-								"dependencyConditions": [
-									"Failed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[Telemetry].[usp_LogPipelineEvent]",
-							"storedProcedureParameters": {
-								"PipelineRunId": {
-									"value": {
-										"value": "@pipeline().RunId",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"PipelineName": {
-									"value": "Gold_Load",
-									"type": "String"
-								},
-								"StageName": {
-									"value": {
-										"value": "@concat('Failed to Load to Gold - ', 'factVisitorLog')",
-										"type": "Expression"
-									},
-									"type": "String"
-								},
-								"ActivityName": {
-									"value": "Run Transforms",
-									"type": "String"
-								},
-								"EventType": {
-									"value": "Error",
-									"type": "String"
-								},
-								"EventTime": {
-									"value": {
-										"value": "@utcNow()",
-										"type": "Expression"
-									},
-									"type": "Datetime"
-								},
-								"DurationSec": {
-									"value": null,
-									"type": "Int64"
-								},
-								"RowsAffected": {
-									"value": null,
-									"type": "Int64"
-								},
-								"Status": {
-									"value": "Failed",
-									"type": "String"
-								},
-								"Message": {
-									"value": {
-										"value": "@string(\nactivity('Run Transform Get Affected Rows').output.errors[0].message\n)",
-										"type": "Expression"
-									},
-									"type": "String"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASA_dspendtoenddemo",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Run Transform Get Affected Rows",
-						"type": "Lookup",
-						"dependsOn": [
-							{
-								"activity": "Log Start",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlDWSource",
-								"sqlReaderQuery": {
-									"value": "@concat(\n  'EXECUTE ',\npipeline().parameters.param_processStage,\n  '.usp_LoadFactVisitorLog'\n)",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_dspendtoenddemo_Table",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"param_ProcessStage": {
-						"type": "string",
-						"defaultValue": "Gold"
-					}
-				},
-				"folder": {
-					"name": "Facts"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-05-22T18:05:55Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ASA_dspendtoenddemo')]",
-				"[concat(variables('factoryId'), '/datasets/DS_dspendtoenddemo_Table')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Trigger_DailyDataGenerator')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "DailyCSVGenerator_SquirrelDataset",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Day",
-						"interval": 1,
-						"startTime": "2025-06-05T08:01:00",
-						"timeZone": "Eastern Standard Time",
-						"schedule": {
-							"minutes": [
-								1
-							],
-							"hours": [
-								8
-							]
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/DailyCSVGenerator_SquirrelDataset')]"
 			]
 		}
 	]
