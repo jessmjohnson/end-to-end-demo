@@ -3,25 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Resume Dedicated Pool",
-				"type": "WebActivity",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"url": {
-						"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  linkedService().KeyVaultLS.getSecret('subscription-id'),\n  '/resourceGroups/<resource-group>/providers/Microsoft.Sql/servers/<synapse-server>/databases/<dedicated-pool>/resume?api-version=2021-02-01-preview'\n)\n",
-						"type": "Expression"
-					}
-				}
-			},
-			{
 				"name": "Get Key Vault Secret",
 				"type": "WebActivity",
 				"dependsOn": [],
