@@ -1,5 +1,5 @@
 {
-	"name": "DailyCSVGenerator_SquirrelDataset",
+	"name": "Squirrel CSV Data Generator",
 	"properties": {
 		"activities": [
 			{
