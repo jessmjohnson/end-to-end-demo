@@ -20,7 +20,7 @@
 						"Content-Type": "application/json"
 					},
 					"url": {
-						"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  variables('var_secret_subscription_id'),\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo',\n  '?api-version=2021-06-01'\n)",
+						"value": "@concat(\n  'https://management.azure.com/subscriptions/',\n  pipeline().parameters.param_subscription_id,\n  '/resourceGroups/rg-end-to-end-demo/',\n  'providers/Microsoft.Synapse/workspaces/synwendtoenddemo/',\n  'sqlpools/dspendtoenddemo',\n  '?api-version=2021-06-01'\n)",
 						"type": "Expression"
 					},
 					"authentication": {
