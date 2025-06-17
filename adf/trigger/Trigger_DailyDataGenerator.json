@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "DailyCSVGenerator_SquirrelDataset",
+					"referenceName": "Squirrel CSV Data Generator",
 					"type": "PipelineReference"
 				}
 			}
